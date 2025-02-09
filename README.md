@@ -17,13 +17,14 @@
 ## 1. Overview
 This challenge assesses your ability to build a **Next.js** frontend application that manages a shopping cart’s **real-time** data updates using **GraphQL** and **Apollo Client**. You will integrate with an existing backend that periodically changes product availability (every 5 minutes) and notifies clients about these changes. The goal is to ensure users are always informed about — and agree to — any cart modifications before proceeding.
 
+**GraphQL endpoint:** `https://take-home-be.onrender.com/api`
+
 ### Tech Stack
 - **Next.js** (Framework)
 - **Apollo Client** (GraphQL)
-- **Zod** (Client-side data validation)
-- **TypeScript** (Recommended for type-safety, but JavaScript is acceptable)
+- **Zod** (Client-side data validation) (recommended)
+- **TypeScript**
 - **ESLint & Prettier** (Code quality and style)
-- **Node.js** / **Express** backend (Existing; for reference only)
 
 ---
 
