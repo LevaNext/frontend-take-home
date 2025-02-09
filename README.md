@@ -90,48 +90,88 @@ This challenge assesses your ability to build a **Next.js** frontend application
 Here is a summary of relevant parts of the schema:
 
 ```graphql
-type Cart {
-  _id: ID!
-  hash: String!
-  items: [CartItem!]!
-  createdAt: String!
-  updatedAt: String!
-}
+ type Cart {
+    _id: ID!
+    hash: String!
+    items: [CartItem!]!
+    createdAt: String!
+    updatedAt: String!
+  }
 
-type CartItem {
-  _id: ID!
-  cartId: ID!
-  product: Product!
-  hash: String!
-  quantity: Int!
-  updatedAt: String!
-  addedAt: String!
-}
+  type CartItem {
+    _id: ID!
+    cartId: ID!
+    product: Product!
+    hash: String!
+    quantity: Int!
+    updatedAt: String!
+    addedAt: String!
+  }
 
-type Product {
-  _id: ID!
-  title: String!
-  cost: Float!
-  availableQuantity: Int!
-  isArchived: Boolean!
-  createdAt: String!
-  updatedAt: String!
-}
+  type Product {
+    _id: ID!
+    title: String!
+    cost: Float!
+    availableQuantity: Int!
+    isArchived: Boolean!
+    createdAt: String!
+    updatedAt: String!
+  }
 
-enum CartItemEvent {
-  ITEM_QUANTITY_UPDATED
-  ITEM_OUT_OF_STOCK
-  ITEM_IN_STOCK
-}
+  type Visitor {
+    _id: ID!
+    token: String!
+    cartId: ID!
+    isActive: Boolean!
+    createdAt: String!
+    updatedAt: String!
+  }
 
-type CartItemMessage {
-  event: CartItemEvent!
-  payload: CartItem
-}
+  input AddItemArgs {
+    productId: ID!
+    quantity: Int!
+  }
 
-type Subscription {
-  cartItemUpdate: CartItemMessage!
-}
+  input RemoveItemArgs {
+    cartItemId: ID!
+  }
+
+  input UpdateItemQuantityArgs {
+    cartItemId: ID!
+    quantity: Int!
+  }
+
+  enum CartItemEvent {
+    ITEM_QUANTITY_UPDATED
+    ITEM_OUT_OF_STOCK
+    ITEM_IN_STOCK
+  }
+
+  type CartItemMessage {
+    event: CartItemEvent!
+    payload: CartItem
+  }
+
+  type Mutation {
+    register: Visitor
+    addItem(input: AddItemArgs!): Cart
+    removeItem(input: RemoveItemArgs!): Cart
+    updateItemQuantity(input: UpdateItemQuantityArgs!): Cart
+  }
+
+  type GetProductsData {
+    products: [Product!]
+    total: Int
+  }
+
+  type Query {
+    getCart: Cart
+    getProducts: GetProductsData
+  }
+
+  type Subscription {
+    cartItemUpdate: CartItemMessage!
+  }
 ```
 
 ---
