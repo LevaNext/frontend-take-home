@@ -259,9 +259,9 @@ You can use these schemas on the client side before making GraphQL mutations to 
   - Provide a detailed description of the functionalities you implemented.
   - Explain your approach to handling real-time data (subscription or polling).
  3. Code Style & Quality
-  - Pass ESLint checks (nexjt
+  - Pass ESLint checks.
   - Use Prettier for code formatting.
-  - If you have automated tests, include instructions for running them (optional but bonus)
+  - If you have automated tests, include instructions for running them (optional but bonus).
 
 ---
 
