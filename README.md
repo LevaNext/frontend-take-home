@@ -199,7 +199,7 @@ export const cartRemoveItemSchema = z.object({
 export const cartUpdateItemQuantitySchema = z.object({
   cartItemId: z
     .string()
-    .refine((input) => validator.isMongoId(input), "Invalid product ID"),
+    .refine((input) => validator.isMongoId(input), "Invalid cart item ID"),
   quantity: z.number().min(1),
 });
 ```
