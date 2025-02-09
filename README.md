@@ -148,24 +148,24 @@ Here is a summary of relevant parts of the schema:
 
   type CartItemMessage {
     event: CartItemEvent!
-    payload: CartItem
+    payload: CartItem!
   }
 
   type Mutation {
-    register: Visitor
-    addItem(input: AddItemArgs!): Cart
-    removeItem(input: RemoveItemArgs!): Cart
-    updateItemQuantity(input: UpdateItemQuantityArgs!): Cart
+    register: Visitor!
+    addItem(input: AddItemArgs!): Cart!
+    removeItem(input: RemoveItemArgs!): Cart!
+    updateItemQuantity(input: UpdateItemQuantityArgs!): Cart!
   }
 
   type GetProductsData {
-    products: [Product!]
-    total: Int
+    products: [Product!]!
+    total: Int!
   }
 
   type Query {
-    getCart: Cart
-    getProducts: GetProductsData
+    getCart: Cart!
+    getProducts: GetProductsData!
   }
 
   type Subscription {
