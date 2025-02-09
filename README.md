@@ -144,7 +144,6 @@ Here is a summary of relevant parts of the schema:
   enum CartItemEvent {
     ITEM_QUANTITY_UPDATED
     ITEM_OUT_OF_STOCK
-    ITEM_IN_STOCK
   }
 
   type CartItemMessage {
