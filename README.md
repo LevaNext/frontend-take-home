@@ -1,4 +1,4 @@
-# Frontend Developer Challenge
+# Frontend Developer Take Home
 
 ## Table of Contents
 1. [Overview](#overview)  
