@@ -232,7 +232,7 @@ You can use these schemas on the client side before making GraphQL mutations to 
   - When receiving an event (ITEM_QUANTITY_UPDATED, ITEM_OUT_OF_STOCK), compare it with the current cart state.
   - Fetch or partially update the affected cart item(s).
 ### Option B: Polling
-  - Periodically check for cart hash changes using a minimal query (e.g., getCartHash if available).
+  - Periodically check for cart hash changes using a minimal query.
   - If the hash changes, fetch the updated cart.
   - This approach is less efficient than subscriptions but is acceptable.
 
@@ -247,7 +247,7 @@ You can use these schemas on the client side before making GraphQL mutations to 
   - Item(s) with changed quantities.
   - Item(s) removed due to being out of stock.
   - User must accept the updated cart state before continuing.
-  - This can be a simple “OK” button or a more thorough re-checkout process.
+  - This can be a simple “OK” button.
 
 ---
 
