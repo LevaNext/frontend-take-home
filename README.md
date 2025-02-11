@@ -103,7 +103,6 @@ Here is a summary of relevant parts of the schema:
     _id: ID!
     cartId: ID!
     product: Product!
-    hash: String!
     quantity: Int!
     updatedAt: String!
     addedAt: String!
