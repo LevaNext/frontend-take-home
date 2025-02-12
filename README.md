@@ -231,6 +231,15 @@ You can use these schemas on the client side before making GraphQL mutations to 
   - Subscribe to cartItemUpdate events.
   - When receiving an event (ITEM_QUANTITY_UPDATED, ITEM_OUT_OF_STOCK), compare it with the current cart state.
   - Fetch or partially update the affected cart item(s).
+  - Use `connectionParams` to pass the `authToken`, ensuring authenticated access
+    ```json
+    {
+       "connectionParams": {
+          "authToken": <TOKEN>
+          }
+    }
+    ```
+    
 ### Option B: Polling
   - Periodically check for cart hash changes using a minimal query.
   - If the hash changes, fetch the updated cart.
