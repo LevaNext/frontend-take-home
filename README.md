@@ -14,6 +14,8 @@
 
 ---
 
+**Please send all test subsmissions and questions to submissions@proxied.com.**
+
 ## 1. Overview
 This challenge assesses your ability to build a **Next.js** frontend application that manages a shopping cart’s **real-time** data updates using **GraphQL** and **Apollo Client**. You will integrate with an existing backend that periodically changes product availability (every 5 minutes) and notifies clients about these changes. The goal is to ensure users are always informed about — and agree to — any cart modifications before proceeding.
 
