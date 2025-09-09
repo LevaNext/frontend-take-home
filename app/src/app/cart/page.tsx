@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { useCartStore } from "@/store/cartStore";
 import { Product } from "@/zod/schemas";
+import { apolloClient } from "@/apollo/clientInstance";
+import { GET_CART } from "@/apollo/queries";
 
 const CartPage: React.FC = () => {
   const items = useCartStore((state) => state.items);
@@ -11,14 +13,24 @@ const CartPage: React.FC = () => {
   const removeItem = useCartStore((state) => state.removeItem);
 
   const [acknowledged, setAcknowledged] = useState(false);
-
-  // მაგალითად hash mismatch-ის შემთხვევაში
   const [cartChanged, setCartChanged] = useState(false);
 
-  // აქ შეიძლებოდა subscription ან polling:
+  // ✅ Fetch cart from backend
   useEffect(() => {
-    // simulate backend cart change
-    // setCartChanged(true) თუ hash შეიცვალა
+    async function fetchCart() {
+      try {
+        const { data } = await apolloClient.query({
+          query: GET_CART,
+          fetchPolicy: "network-only",
+        });
+
+        console.log("GET_CART response:", data);
+      } catch (err) {
+        console.error("Failed to fetch cart:", err);
+      }
+    }
+
+    fetchCart();
   }, []);
 
   const handleAcknowledge = () => {

@@ -50,3 +50,28 @@ export const REMOVE_ITEM = gql`
     }
   }
 `;
+
+export const GET_CART = gql`
+  query GetCart {
+    getCart {
+      _id
+      hash
+      items {
+        _id
+        cartId
+        product {
+          _id
+          title
+          cost
+          availableQuantity
+          isArchived
+        }
+        quantity
+        updatedAt
+        addedAt
+      }
+      createdAt
+      updatedAt
+    }
+  }
+`;
