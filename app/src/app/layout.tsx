@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+// import { Geist, Geist_Mono } from "next/font/google";
 import "antd/dist/reset.css";
 import "./globals.css";
 import { NotificationToast } from "@/components/NotificationToast";
 import Header from "@/components/Header";
 import ApolloWrapper from "@/components/ApolloWrapper";
+import ClientBodyWrapper from "@/components/ClientBodyWrapper";
 
-const geistSans = Geist({ subsets: ["latin"], display: "swap" });
-const geistMono = Geist_Mono({ subsets: ["latin"], display: "swap" });
+// const geistSans = Geist({ subsets: ["latin"], display: "swap" });
+// const geistMono = Geist_Mono({ subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -21,19 +22,17 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body
-        className={`antialiased ${geistSans.className} ${geistMono.className}`}
-      >
+      <body>
         <Header />
-
-        {/* client-only wrapper for hydration warning */}
         <div id="client-wrapper">
-          <ApolloWrapper>
-            <div className="container rounded-xl mx-auto p-2 bg-gray-300 min-h-[calc(100vh-6rem)]">
-              {children}
-            </div>
-          </ApolloWrapper>
-          <NotificationToast />
+          <ClientBodyWrapper>
+            <ApolloWrapper>
+              <div className="container rounded-xl mx-auto p-2 bg-gray-300 min-h-[calc(100vh-6rem)]">
+                {children}
+              </div>
+            </ApolloWrapper>
+            <NotificationToast />
+          </ClientBodyWrapper>
         </div>
       </body>
     </html>

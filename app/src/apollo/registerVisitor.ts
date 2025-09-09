@@ -1,11 +1,10 @@
 "use client";
-
 import { gql } from "@apollo/client";
-import { client } from "./client";
+import { createApolloClient } from "./client";
 import { z } from "zod";
 import { notifyError } from "@/components/NotificationToast";
 
-// Zod schema
+// Schema ვალიდაციისთვის
 const registerVisitorSchema = z.object({
   register: z.object({
     _id: z.string(),
@@ -24,21 +23,19 @@ const REGISTER_VISITOR = gql`
   }
 `;
 
-// find and return existing token
-export function getVisitorTokenFromCookie(): string | null {
-  return (
-    document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("visitorToken="))
-      ?.split("=")[1] || null
-  );
-}
-
+// Visitor-ის რეგისტრაცია ან cookie-დან ამოღება
 export async function registerVisitor() {
   try {
-    const existingToken = getVisitorTokenFromCookie();
-    if (existingToken) return { token: existingToken };
+    const existingToken = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("visitorToken="))
+      ?.split("=")[1];
 
+    if (existingToken) {
+      return { token: existingToken }; // აბრუნებს მხოლოდ token-ს
+    }
+
+    const client = createApolloClient();
     const { data } = await client.mutate({ mutation: REGISTER_VISITOR });
 
     const parsed = registerVisitorSchema.safeParse(data);
@@ -49,11 +46,12 @@ export async function registerVisitor() {
 
     const visitor = parsed.data.register;
 
-    // save in cookie 7 days
+    // Cookie-ში ჩაწერა 7 დღით
     document.cookie = `visitorToken=${visitor.token}; path=/; secure; samesite=strict; max-age=604800`;
 
     return visitor;
   } catch (err: any) {
+    console.error("Visitor registration failed:", err);
     notifyError("Failed to register visitor: network/server error");
     throw err;
   }

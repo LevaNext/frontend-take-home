@@ -1,104 +1,69 @@
 "use client";
-import {
-  MinusOutlined,
-  PlusOutlined,
-  ShoppingCartOutlined,
-} from "@ant-design/icons";
-import { Button, Card, Space } from "antd";
-import Meta from "antd/es/card/Meta";
 
-import Link from "next/link";
-import Image from "next/image";
+import { useCartStore } from "@/store/cartStore";
+import { Product } from "@/zod/schemas";
 
-interface Product {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  availableQuantity: number;
-}
-
-interface ProductItemProps {
+interface ProductCardProps {
   product: Product;
-  inCart?: boolean;
-  quantity?: number;
 }
 
-const ProductCard = ({
-  product,
-  inCart = false,
-  quantity = 0,
-}: ProductItemProps) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+  const addItem = useCartStore((state) => state.addItem);
+  const decreaseItem = useCartStore((state) => state.decreaseItem);
+  const items = useCartStore((state) => state.items);
+
+  const cartItem = items.find((i) => i.product._id === product._id);
+  const quantity = cartItem?.quantity ?? 0;
+
   const outOfStock = product.availableQuantity === 0;
-  console.log(product);
+
+  const handleAdd = () => {
+    if (quantity < product.availableQuantity) {
+      addItem(product);
+    }
+  };
+
+  const handleDecrease = () => {
+    if (quantity > 0) decreaseItem(product._id);
+  };
 
   return (
-    <Link href={`/products/${product.id}`}>
-      <Card
-        size="small"
-        style={{ width: 300 }}
-        cover={
-          <img
-            alt="example"
-            src="https://gw.alipayobjects.com/zos/rmsportal/JiqGstEfoWAOHiTxclqi.png"
-          />
-        }
-        actions={[
-          // hide when unavailable
-          ...(outOfStock
-            ? [
-                <div
-                  key="price"
-                  className="cursor-default select-none font-bold"
-                >
-                  10 USD
-                </div>,
-              ]
-            : []),
+    <div className="border rounded-lg shadow p-4 flex flex-col items-center space-y-3">
+      <h3 className="font-semibold text-lg text-center">{product.title}</h3>
+      <p className="text-gray-700 font-bold">{product.cost}$</p>
 
-          ...(outOfStock && !inCart
-            ? [<ShoppingCartOutlined key="cart" style={{ fontSize: 19 }} />]
-            : []),
-
-          // Quantity controls
-          ...(inCart && outOfStock
-            ? [
-                <Space.Compact>
-                  <Button
-                    disabled={quantity === 0 || !inCart}
-                    onClick={() => console.log("decline")}
-                    icon={<MinusOutlined />}
-                  />
-                  <Button
-                    className="pointer-events-none"
-                    onClick={() => console.log("random")}
-                  >
-                    {quantity}
-                  </Button>
-                  <Button
-                    disabled={quantity >= product.availableQuantity || !inCart}
-                    icon={<PlusOutlined />}
-                  />
-                </Space.Compact>,
-              ]
-            : []),
-
-          // out of Stock
-          ...(outOfStock
-            ? [
-                <div
-                  key="out-of-stock"
-                  className="text-red-700 cursor-default select-none"
-                >
-                  Out of Stock
-                </div>,
-              ]
-            : []),
-        ]}
-      >
-        <Meta title="Card title" description="This is the description" />
-      </Card>
-    </Link>
+      {outOfStock ? (
+        <p className="text-red-600 font-semibold">Out of stock</p>
+      ) : (
+        <>
+          {quantity === 0 ? (
+            <button
+              onClick={handleAdd}
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+            >
+              Add to cart
+            </button>
+          ) : (
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handleDecrease}
+                className="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300 transition"
+              >
+                -
+              </button>
+              <span className="font-medium">{quantity}</span>
+              <button
+                onClick={handleAdd}
+                className="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300 transition"
+                disabled={quantity >= product.availableQuantity}
+              >
+                +
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </div>
   );
 };
 

@@ -1,10 +1,35 @@
+import { GET_PRODUCTS } from "@/apollo/queries";
+import { getServerApolloClient } from "@/apollo/serverApollo";
 import ProductList from "@/components/ProductList";
+import { ProductsData, productsSchema } from "@/zod/schemas";
+import { z } from "zod";
 
 export default async function Home() {
+  const client = await getServerApolloClient();
+
+  let products: ProductsData = [];
+
+  try {
+    const result = await client.query({ query: GET_PRODUCTS });
+
+    // Validate server-side response
+    const parsed = productsSchema.safeParse(result.data);
+    if (!parsed.success) {
+      console.error(
+        "Invalid products data from server:",
+        z.treeifyError(parsed.error)
+      );
+    } else {
+      products = parsed.data.getProducts.products;
+    }
+  } catch (err) {
+    console.error("Failed to fetch products server-side:", err);
+  }
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <ProductList products={[]} />
+    <div className="">
+      <main className="">
+        <ProductList products={products} />
       </main>
     </div>
   );

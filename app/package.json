@@ -19,7 +19,8 @@
     "react-toastify": "^11.0.5",
     "rxjs": "^7.8.2",
     "validator": "^13.15.15",
-    "zod": "^4.1.5"
+    "zod": "^4.1.5",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
