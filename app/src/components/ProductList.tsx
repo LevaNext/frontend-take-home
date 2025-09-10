@@ -1,4 +1,4 @@
-import { Product } from "@/zod/products";
+import { Product } from "@/zod/product";
 import ProductCard from "./ProductCard";
 
 const ProductList: React.FC<{ products: Product[] }> = ({ products }) => {

@@ -1,55 +1,30 @@
-export interface Product {
-  _id: string;
-  title: string;
-  cost: number;
-  availableQuantity: number;
-  isArchived: boolean;
-  createdAt: string;
-  updatedAt: string;
-}
+import { Product } from "@/zod/product";
 
-export interface CartItem {
-  _id: string;
-  cartId: string;
+export interface CartItemType {
+  _id: string; // backend CartItem ID
   product: Product;
   quantity: number;
-  addedAt: string;
-  updatedAt: string;
 }
 
-export interface Cart {
-  _id: string;
-  hash: string;
-  items: CartItem[];
-  createdAt: string;
-  updatedAt: string;
-}
-
-// Define TypeScript type
-type CartItemType = {
-  _id: string;
-  cartId: string;
-  product: {
-    _id: string;
-    title: string;
-    cost: number;
-    availableQuantity: number;
-    isArchived: boolean;
+export interface AddItemMutationResult {
+  addItem: {
+    _id: string; // Cart ID
+    hash: string;
+    items: CartItemType[];
   };
-  quantity: number;
-  updatedAt: string;
-  addedAt: string;
-};
+}
 
-type CartType = {
-  _id: string;
-  hash: string;
+// State for the cart store
+export interface CartState {
+  hasToken: boolean; // true if token exists in cookie
   items: CartItemType[];
-  createdAt: string;
-  updatedAt: string;
-};
+  cartHash?: string;
 
-// Query result type
-export type GetCartQueryResult = {
-  getCart: CartType;
-};
+  // Actions
+  setHasToken: (value: boolean) => void;
+  addItem: (product: Product) => Promise<void>;
+  decreaseItem: (productId: string) => Promise<void>;
+  removeItem: (productId: string) => Promise<void>;
+  updateItemQuantity: (productId: string, quantity: number) => Promise<void>;
+  clearCart: () => void;
+}

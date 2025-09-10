@@ -1,7 +1,7 @@
 import { GET_PRODUCTS } from "@/apollo/queries";
 import { getServerApolloClient } from "@/apollo/serverApollo";
 import ProductList from "@/components/ProductList";
-import { ProductsData, productsSchema } from "@/zod/products";
+import { ProductsData, productsSchema } from "@/zod/product";
 import { z } from "zod";
 
 export default async function Home() {

@@ -1,40 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useCartStore } from "@/store/cartStore";
 import { GET_CART } from "@/apollo/queries";
+import { useCartStore } from "@/store/store";
+import { getCartSchema } from "@/zod/cart";
 import { useQuery } from "@apollo/client/react";
-import { z } from "zod";
-
-// -------------------
-// Zod schemas
-// -------------------
-const productSchema = z.object({
-  _id: z.string(),
-  title: z.string(),
-  cost: z.number(),
-  availableQuantity: z.number(),
-  isArchived: z.boolean().optional(),
-});
-
-const cartItemSchema = z.object({
-  _id: z.string(),
-  cartId: z.string(),
-  product: productSchema,
-  quantity: z.number(),
-  updatedAt: z.string(),
-  addedAt: z.string(),
-});
-
-const cartSchema = z.object({
-  getCart: z.object({
-    _id: z.string(),
-    hash: z.string(),
-    items: z.array(cartItemSchema),
-    createdAt: z.string(),
-    updatedAt: z.string(),
-  }),
-});
+import React, { useEffect, useState } from "react";
 
 interface DiffItem {
   productId: string;
@@ -54,21 +24,16 @@ const CartPage: React.FC = () => {
   const [cartChanged, setCartChanged] = useState(false);
   const [diff, setDiff] = useState<DiffItem[]>([]);
 
-  // -------------------
-  // GraphQL query with polling (every 5 min)
-  // -------------------
   const { data } = useQuery(GET_CART, {
     fetchPolicy: "network-only",
-    pollInterval: 5 * 60 * 1000, // 5 minutes
+    pollInterval: 5 * 60 * 1000, // 5 min
   });
 
-  // -------------------
-  // Handle diff when data changes
-  // -------------------
+  // backend cart changes
   useEffect(() => {
     if (!data) return;
 
-    const parsed = cartSchema.safeParse(data);
+    const parsed = getCartSchema.safeParse(data);
     if (!parsed.success) {
       console.error("Invalid GET_CART data:", parsed.error);
       return;
@@ -84,6 +49,7 @@ const CartPage: React.FC = () => {
         (i) => i.product._id === lItem.product._id
       );
 
+      // out of stock or removed
       if (!bItem || bItem.product.availableQuantity === 0) {
         newDiff.push({
           productId: lItem.product._id,
@@ -93,6 +59,7 @@ const CartPage: React.FC = () => {
         return;
       }
 
+      // quantity reduced
       if (bItem.product.availableQuantity < lItem.quantity) {
         newDiff.push({
           productId: lItem.product._id,
@@ -106,8 +73,19 @@ const CartPage: React.FC = () => {
     setDiff(newDiff);
     setCartChanged(newDiff.length > 0);
     setAcknowledged(false);
-  }, [data]);
 
+    // always update cartHash and backend items for reference
+    setItems({
+      items: backendCart.items.map((i) => ({
+        _id: i._id,
+        product: i.product,
+        quantity: i.quantity,
+      })),
+      cartHash: backendCart.hash,
+    });
+  }, [data, setItems]);
+
+  // acknowledge backend changes
   const handleAcknowledge = () => {
     const localItems = useCartStore.getState().items;
 
@@ -135,7 +113,12 @@ const CartPage: React.FC = () => {
     0
   );
 
-  if (items.length === 0) return <p className="p-4">Your cart is empty</p>;
+  if (items.length === 0)
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <p className="text-gray-500 text-2xl font-medium">Your cart is empty</p>
+      </div>
+    );
 
   return (
     <div className="p-4 max-w-6xl mx-auto">
@@ -164,9 +147,8 @@ const CartPage: React.FC = () => {
         </div>
       )}
 
-      {/* Cart + Summary container */}
+      {/* Cart + Summary */}
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Cart Items */}
         <div className="flex-1 space-y-4">
           {items.map((item) => {
             const outOfStock = item.product.availableQuantity === 0;
@@ -188,30 +170,27 @@ const CartPage: React.FC = () => {
                   <p className="text-red-600 font-bold">Out of stock</p>
                 ) : (
                   <div className="flex flex-col items-center gap-3">
-                    {/* Quantity buttons */}
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => decreaseItem(item.product._id)}
-                        className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition"
+                        className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-300 transition"
                       >
                         -
                       </button>
                       <span className="w-6 text-center font-medium">
                         {item.quantity}
                       </span>
-
                       <button
                         disabled={
                           item.quantity >= item.product.availableQuantity
                         }
                         onClick={() => addItem(item.product)}
-                        className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 transition"
+                        className="px-3 py-1 bg-gray-100 rounded hover:bg-gray-300 transition disabled:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         +
                       </button>
                     </div>
 
-                    {/* Remove button */}
                     <button
                       onClick={() => removeItem(item.product._id)}
                       className="px-3 py-1 bg-red-500 !text-white font-semibold rounded hover:bg-red-600 transition w-full"
@@ -225,11 +204,11 @@ const CartPage: React.FC = () => {
           })}
         </div>
 
-        {/* Checkout Summary */}
         <div className="w-full max-h-fit lg:w-80 border rounded-2xl p-4 shadow-sm bg-amber-100 flex flex-col space-y-4">
           <h3 className="text-lg font-semibold text-gray-800">
             Checkout Summary
           </h3>
+
           <div className="flex justify-between items-center">
             <span className="font-medium text-gray-700">Total:</span>
             <span className="font-bold text-gray-900">

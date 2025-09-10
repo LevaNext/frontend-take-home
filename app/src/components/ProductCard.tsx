@@ -1,7 +1,7 @@
 "use client";
 
-import { useCartStore } from "@/store/cartStore";
-import { Product } from "@/zod/products";
+import { useCartStore } from "@/store/store";
+import { Product } from "@/zod/product";
 
 const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
   const addItem = useCartStore((state) => state.addItem);
@@ -55,7 +55,7 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
             <div className="flex items-center gap-0.5">
               <button
                 onClick={handleDecrease}
-                className="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300 transition"
+                className="bg-gray-100 px-3 py-1 rounded hover:bg-gray-300 transition"
               >
                 -
               </button>
@@ -64,7 +64,7 @@ const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
               </span>
               <button
                 onClick={handleAdd}
-                className="bg-gray-200 px-3 py-1 rounded hover:bg-gray-300 transition"
+                className="bg-gray-100 px-3 py-1 rounded hover:bg-gray-300 transition disabled:bg-gray-400 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={quantity >= product.availableQuantity}
               >
                 +
