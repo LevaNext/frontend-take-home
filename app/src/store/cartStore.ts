@@ -2,11 +2,11 @@
 
 import { create } from "zustand";
 import { devtools, persist } from "zustand/middleware";
-import { Product } from "@/zod/schemas";
 import { apolloClient } from "@/apollo/clientInstance";
 import { ADD_ITEM, GET_CART, REMOVE_ITEM } from "@/apollo/queries";
 import { GetCartQueryResult } from "@/types/cart";
 import z from "zod";
+import { Product } from "@/zod/products";
 
 export interface CartItemType {
   _id: string; // backend cartItem._id
