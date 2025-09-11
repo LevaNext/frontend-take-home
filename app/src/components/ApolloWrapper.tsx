@@ -49,6 +49,14 @@ export default function ApolloWrapper({ children }: { children: ReactNode }) {
     init();
   }, [setHasToken]);
 
-  if (!client) return <div>Loading...</div>;
+  if (!client)
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="flex flex-col items-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+
   return <ApolloProvider client={client}>{children}</ApolloProvider>;
 }

@@ -6,7 +6,12 @@ import {
   REMOVE_ITEM,
   UPDATE_ITEM_QUANTITY,
 } from "@/apollo/mutations";
-import { AddItemMutationResult, CartState } from "@/types/cart";
+import {
+  AddItemMutationResult,
+  CartItemType,
+  CartState,
+  DiffItem,
+} from "@/types/cart";
 import {
   RemoveItemMutationResult,
   UpdateItemQuantityMutationResult,
@@ -23,9 +28,84 @@ export const useCartStore = create<CartState>()(
         hasToken: false,
         items: [],
         cartHash: undefined,
+        cartChanged: false,
+        diff: [],
+        acknowledged: false,
+
+        setDiff: (diff: DiffItem[]) => set({ diff }),
+        setCartChanged: (cartChanged: boolean) => set({ cartChanged }),
 
         // set token flag if cookie exists
         setHasToken: (value: boolean) => set({ hasToken: value }),
+
+        setItems: ({
+          items,
+          cartHash,
+        }: {
+          items: CartItemType[];
+          cartHash?: string;
+        }) => set({ items, cartHash }),
+
+        acknowledgeChanges: () => {
+          const updatedItems: CartItemType[] = get()
+            .items.map((item) => {
+              const d = get().diff.find(
+                (d) => d.productId === item.product._id
+              );
+              if (!d) return item;
+              if (d.newQuantity !== undefined)
+                return { ...item, quantity: d.newQuantity };
+              return null; // remove if out of stock
+            })
+            .filter((i): i is CartItemType => i !== null);
+
+          set({
+            items: updatedItems,
+            acknowledged: true,
+            cartChanged: false,
+            diff: [],
+          });
+        },
+
+        syncWithBackend: (
+          backendItems: CartItemType[],
+          backendHash?: string
+        ) => {
+          const localItems = get().items;
+          const newDiff: DiffItem[] = [];
+
+          localItems.forEach((lItem) => {
+            const bItem = backendItems.find(
+              (i) => i.product._id === lItem.product._id
+            );
+
+            if (!bItem || bItem.product.availableQuantity === 0) {
+              newDiff.push({
+                productId: lItem.product._id,
+                title: lItem.product.title,
+                oldQuantity: lItem.quantity,
+              });
+              return;
+            }
+
+            if (bItem.product.availableQuantity < lItem.quantity) {
+              newDiff.push({
+                productId: lItem.product._id,
+                title: lItem.product.title,
+                oldQuantity: lItem.quantity,
+                newQuantity: bItem.product.availableQuantity,
+              });
+            }
+          });
+
+          set({
+            items: backendItems,
+            cartHash: backendHash,
+            diff: newDiff,
+            cartChanged: newDiff.length > 0,
+            acknowledged: false,
+          });
+        },
 
         // add new item to cart or increase quantity
         addItem: async (product: Product) => {
@@ -133,8 +213,6 @@ export const useCartStore = create<CartState>()(
 
             set({
               items: parseResult.data.items,
-              // TODO check the assignment
-              // cartHash: parseResult.data.hash, // hash updates on remove
               cartHash:
                 parseResult.data.items.length > 0
                   ? parseResult.data.hash

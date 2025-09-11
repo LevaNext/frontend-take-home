@@ -1,30 +1,23 @@
 "use client";
 
 import { GET_CART } from "@/apollo/queries";
+import { CartChangeModal } from "@/components/CartChangeModal";
 import { useCartStore } from "@/store/store";
 import { getCartSchema } from "@/zod/cart";
 import { useQuery } from "@apollo/client/react";
-import React, { useEffect, useState } from "react";
-
-interface DiffItem {
-  productId: string;
-  title: string;
-  oldQuantity: number;
-  newQuantity?: number; // undefined if out of stock
-}
+import React, { useEffect } from "react";
 
 const CartPage: React.FC = () => {
-  const items = useCartStore((state) => state.items);
-  const setItems = useCartStore.setState;
-  const addItem = useCartStore((state) => state.addItem);
-  const decreaseItem = useCartStore((state) => state.decreaseItem);
-  const removeItem = useCartStore((state) => state.removeItem);
+  const {
+    items,
+    addItem,
+    decreaseItem,
+    removeItem,
+    acknowledged,
+    cartChanged,
+  } = useCartStore();
 
-  const [acknowledged, setAcknowledged] = useState(false);
-  const [cartChanged, setCartChanged] = useState(false);
-  const [diff, setDiff] = useState<DiffItem[]>([]);
-
-  const { data } = useQuery(GET_CART, {
+  const { data, loading } = useQuery(GET_CART, {
     fetchPolicy: "network-only",
     pollInterval: 5 * 60 * 1000, // 5 min
   });
@@ -34,84 +27,59 @@ const CartPage: React.FC = () => {
     if (!data) return;
 
     const parsed = getCartSchema.safeParse(data);
-    if (!parsed.success) {
-      console.error("Invalid GET_CART data:", parsed.error);
-      return;
-    }
+    if (!parsed.success) return;
 
-    const backendCart = parsed.data.getCart;
+    const backendItems = parsed.data.getCart.items;
     const localItems = useCartStore.getState().items;
 
-    const newDiff: DiffItem[] = [];
-
-    localItems.forEach((lItem) => {
-      const bItem = backendCart.items.find(
+    const newDiff = localItems.flatMap((lItem) => {
+      const bItem = backendItems.find(
         (i) => i.product._id === lItem.product._id
       );
 
-      // out of stock or removed
       if (!bItem || bItem.product.availableQuantity === 0) {
-        newDiff.push({
-          productId: lItem.product._id,
-          title: lItem.product.title,
-          oldQuantity: lItem.quantity,
-        });
-        return;
+        return [
+          {
+            productId: lItem.product._id,
+            title: lItem.product.title,
+            oldQuantity: lItem.quantity,
+          },
+        ];
       }
 
-      // quantity reduced
-      if (bItem.product.availableQuantity < lItem.quantity) {
-        newDiff.push({
-          productId: lItem.product._id,
-          title: lItem.product.title,
-          oldQuantity: lItem.quantity,
-          newQuantity: bItem.product.availableQuantity,
-        });
+      if (bItem.quantity < lItem.quantity) {
+        return [
+          {
+            productId: lItem.product._id,
+            title: lItem.product.title,
+            oldQuantity: lItem.quantity,
+            newQuantity: bItem.quantity,
+          },
+        ];
       }
+
+      return [];
     });
 
-    setDiff(newDiff);
-    setCartChanged(newDiff.length > 0);
-    setAcknowledged(false);
-
-    // always update cartHash and backend items for reference
-    setItems({
-      items: backendCart.items.map((i) => ({
+    // set items + update cartChanged/diff
+    useCartStore.setState({
+      items: backendItems.map((i) => ({
         _id: i._id,
         product: i.product,
         quantity: i.quantity,
       })),
-      cartHash: backendCart.hash,
+      cartHash: parsed.data.getCart.hash,
+      cartChanged: newDiff.length > 0,
+      diff: newDiff,
+      acknowledged: false,
     });
-  }, [data, setItems]);
-
-  // acknowledge backend changes
-  const handleAcknowledge = () => {
-    const localItems = useCartStore.getState().items;
-
-    const updatedItems = localItems
-      .map((lItem) => {
-        const d = diff.find((d) => d.productId === lItem.product._id);
-        if (!d) return lItem;
-        if (d.newQuantity !== undefined) {
-          return { ...lItem, quantity: d.newQuantity };
-        }
-        return null; // remove if out of stock
-      })
-      .filter(Boolean) as typeof localItems;
-
-    setItems({ items: updatedItems });
-    setAcknowledged(true);
-    setCartChanged(false);
-    setDiff([]);
-  };
-
-  const isCheckoutDisabled = cartChanged && !acknowledged;
+  }, [data]);
 
   const totalPrice = items.reduce(
     (acc, item) => acc + item.product.cost * item.quantity,
     0
   );
+  const summaryBtn = loading || (cartChanged && !acknowledged);
 
   if (items.length === 0)
     return (
@@ -122,30 +90,8 @@ const CartPage: React.FC = () => {
 
   return (
     <div className="p-4 max-w-6xl mx-auto">
-      {/* Backend update notification */}
-      {cartChanged && !acknowledged && (
-        <div className="bg-yellow-100 border-l-4 border-yellow-400 p-4 rounded shadow-sm mb-4">
-          <p className="font-medium text-yellow-800">
-            🛒 Cart has been updated by the backend. Please acknowledge changes:
-          </p>
-          <ul className="list-disc ml-5 mt-2 text-yellow-900">
-            {diff.map((d) => (
-              <li key={d.productId}>
-                {d.title}:{" "}
-                {d.newQuantity !== undefined
-                  ? `Quantity reduced from ${d.oldQuantity} to ${d.newQuantity}`
-                  : "Out of stock"}
-              </li>
-            ))}
-          </ul>
-          <button
-            className="mt-3 px-4 py-2 bg-yellow-600 text-white font-semibold rounded hover:bg-yellow-700 transition"
-            onClick={handleAcknowledge}
-          >
-            OK
-          </button>
-        </div>
-      )}
+      {/* Cart change modal */}
+      <CartChangeModal />
 
       {/* Cart + Summary */}
       <div className="flex flex-col lg:flex-row gap-6">
@@ -216,9 +162,9 @@ const CartPage: React.FC = () => {
             </span>
           </div>
           <button
-            disabled={isCheckoutDisabled}
+            disabled={summaryBtn}
             className={`w-full px-4 py-2 font-semibold rounded transition ${
-              isCheckoutDisabled
+              summaryBtn
                 ? "bg-gray-400 text-white cursor-not-allowed"
                 : "bg-amber-500 text-white hover:bg-amber-600"
             }`}
